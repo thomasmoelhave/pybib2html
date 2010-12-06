@@ -1,0 +1,6 @@
+This is a simple python program to translate a bibtex file into HTML.
+
+Dependencies:
+	* python
+	* pybtex
+	
