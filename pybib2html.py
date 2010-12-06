@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import sys
+
 def sort_by_year(y, x):
 	return int(x[1].fields['year']) - int(y[1].fields['year'])
 
@@ -15,17 +17,24 @@ def printtex(t):
 	t=t.replace("\\aa{}","&aring;")
 	t=t.replace("{","")
 	t=t.replace("}","")
-	print t
+	sys.stdout.write(t)
 
-def opentag(t, args=""):
-	print "<"+t+" " + args+" >"
-def closetag(t):
-	print "</"+t+">"
+def print_tag(t,extra_args=""):
+	if extra_args == "":
+		sys.stdout.write("<"+t+">")
+	else:
+		sys.stdout.write("<"+t+" " + extra_args+">")
+
+def open_tag(t, args=""):
+	print_tag(t,args)
+
+def close_tag(t):
+	print_tag('/'+t)
 
 def html_intag(t,x):
-	opentag(t)
+	open_tag(t)
 	printtex(x)
-	closetag(t)
+	close_tag(t)
 
 def html_strong(x):
 	html_intag("strong",x)
@@ -34,16 +43,15 @@ def html_i(x):
 	html_intag("i",x)
 
 def html_br():
-	closetag("br")
+	close_tag("br")
+	print ""
 
 def html_a(target,text):
-	opentag("a","href=\""+target+"\"")
+	open_tag("a","href=\""+target+"\"")
 	printtex(text)
-	closetag("a")
+	close_tag("a")
 
-def handle_default(value):
-	print "<li>"
-
+def put_title_author(value):
 	html_strong(value.fields['title'])
 
 	if 'doi' in value.fields:
@@ -52,24 +60,57 @@ def handle_default(value):
 	html_br()
 
 	printtex(value.fields['author'])
-		
-	html_br()
 
-	if 'booktitle' in value.fields:
-		html_i(value.fields['booktitle'])
-		print ","
+def new_entry_begin():
+	open_tag("li")
+
+def new_entry_end():
+	close_tag("li")
+
+def put_data_line(value,f):
+	if f in value.fields:
+		html_br()
+		html_i(value.fields[f])
+		sys.stdout.write(",")
+	sys.stdout.write(" "+value.fields['year'])
+
+
+
+def handle_default(value):
+	new_entry_begin()
+
+	put_title_author(value)
+
 	if 'journal' in value.fields:
+		html_br()
 		html_i(value.fields['journal'])
 		print ","
 	if 'howpublished' in value.fields:
+		html_br()
 		html_i(value.fields['howpublished'])
 		print ","
 	print value.fields['year']
+	new_entry_end()
 
-	print "</li>"
+def handle_article(value):
+	new_entry_begin()
+	put_title_author(value)
+	put_data_line(value,"journal")
+	new_entry_end()
+
 
 def handle_inproceedings(value):
-	handle_default(value)
+	new_entry_begin()
+	put_title_author(value)
+	put_data_line(value,"booktitle")
+	new_entry_end()
+
+def handle_techreport(value):
+	new_entry_begin()
+	put_title_author(value)
+	put_data_line(value,"institution")
+	new_entry_end()
+
 
 
 
@@ -78,16 +119,14 @@ def main():
 	from pybtex.database.input import bibtex
 	from operator import itemgetter, attrgetter
 	import pprint
-	import sys
 	parser = bibtex.Parser()
 	bib_data = parser.parse_file('mypapers.bib')
 	bib_sorted = sorted(bib_data.entries.items(), cmp=sort_by_year)
 
 	print "<ul>"
 
-	handlers = {'inproceedings':handle_inproceedings}
+	handlers = {'article':handle_article,'inproceedings':handle_inproceedings,'techreport':handle_techreport}
 	
-
 	for key, value in bib_sorted:
 		bibtex_class = value.type
 		if (bibtex_class in handlers):
