@@ -8,7 +8,19 @@ output_file=sys.stdout
 author_data = dict()
 
 def sort_by_year(y, x):
-	return int(x[1].fields['year']) - int(y[1].fields['year'])
+	xyear = int(x[1].fields['year']) 
+	yyear = int(y[1].fields['year'])
+	if xyear != yyear:
+		return xyear - yyear
+	
+	#same year, sort by month if possible
+	if 'month' in x[1].fields and 'month' in y[1].fields:
+		xmonth = int(x[1].fields['month']) 
+		ymonth = int(y[1].fields['month'])
+		if xmonth != ymonth:
+			return xmonth - ymonth
+
+	return x[0] < y[0]
 
 def print_output(s):
 	global output_file
@@ -19,9 +31,6 @@ def replace_all(text, dic):
 	for i, j in dic.iteritems():
 		text = text.replace(i, j)
 	return text
-
-
-	
 
 def print_tag(t,extra_args=""):
 	if extra_args == "":
@@ -141,6 +150,8 @@ def put_title(value):
 	open_tag("strong")
 #	open_tag("a","href=\"#\"")
 	printtex(value.fields['title'])
+	if 'note' in value.fields:
+		print_output(' <small><font color=\"red\">' + value.fields['note'] + "</font></small>")
 #	close_tag("a")
 	close_tag("strong")
 
@@ -330,7 +341,7 @@ def handle_values(l):
 		publication_counter+=1
 
 def handle_types(list_of_types,typemaps, description):
-	print_output("<h2>"+description+"</h2>")
+	print_output("<strong>"+description+"</strong>")
 #	open_tag("div","id=\"accordion\"")
 	open_tag("ol","start=\""+str(publication_counter)+"\"")
 	for l in list_of_types:
