@@ -1,0 +1,2 @@
+John Doe=john@thedoes.org
+Jane Baz=jane@thebaz.org
