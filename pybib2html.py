@@ -162,6 +162,11 @@ def put_title_author(value):
 	print_authors(value)
 
 def new_entry_end(key,value):
+	print value.fields["year"]
+	print value.fields.items()
+
+	#print "@"+value.fields['type']+" {" + key +","
+
 	if	"abstract" in value.fields:
 		key=key.replace(":","__")
 		print_output("<small><a href=\"#"+key+"\" id=\"hide_"+key+"\">Hide Details</a> / \n")
@@ -354,7 +359,7 @@ def handle_types(list_of_types,typemaps, description):
 	
 def main():
 	import getopt
-	options,remainder=getopt.getopt(sys.argv[1:], 'i:o:a:',['input=','output=',"authorfile="])
+	options,remainder=getopt.getopt(sys.argv[1:], 'i:o:a:',['input=','output=',"authors="])
 
 
 	from pybtex.database.input import bibtex
