@@ -281,7 +281,14 @@ def handle_article(key,value):
 	new_entry_begin(key,value)
 	put_title_author(value)
 	put_data_line(value,"journal")
+	open_tag("div")
+	open_tag("div","class=\""+key.replace(":","__")+"\" style=\"display:none;\"")
+	if 'abstract' in value.fields:
+		print_abstract(value)
 	print_doi(value)
+	close_tag("div")
+	close_tag("div")
+
 	new_entry_end(key,value)
 
 def print_abstract(value):
