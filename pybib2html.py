@@ -37,25 +37,18 @@ def print_tag(t,extra_args=""):
 		print_output("<"+t+">")
 	else:
 		print_output("<"+t+" " + extra_args+">")
+	print_output("\n")
 
 def put_header():
 	open_tag("head");
-#	print_output("<link href=\"http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\"/>"
-#	print_output("<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js\"></script>"
-#	print_output("<script src=\"http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js\"></script>"
-  
-	#print_output("  <script>"
-	#print_output("  $(document).ready(function() {"
-	#print_output("    $(\"#accordion\").accordion();"
-	#print_output("  });"
-	#print_output("  </script>"
-	print_output("<script src=\"http://code.jquery.com/jquery-1.4.4.js\"></script>\n")
+	print_output("<script src=\"http://code.jquery.com/jquery-1.5.1.js\"></script>\n")
+	print_output("<script type=\"text/javascript\" src=\"showhide.js\"> </script>")
 	print_output("<link href=\"style.css\" type=text/css rel=stylesheet>\n")
 	close_tag("head");
 
 
 def open_tag(t, args=""):
-	print_tag(t,args)
+	print_tag(t,args) 
 
 def close_tag(t):
 	print_tag('/'+t)
@@ -81,6 +74,19 @@ def html_a(target,text):
 	open_tag("a","href=\""+target+"\"")
 	printtex(text)
 	close_tag("a")
+
+def open_div():
+	open_tag("div")
+
+def open_div(classname=None):
+	if classname is None:
+		open_tag("div")
+	else:
+		open_tag("div","class=\""+classname+"\"")
+
+def close_div():
+	close_tag("div")
+
 
 def printtex_replace_command(t,command,newtext,argc,commandprefix="\\\\"):
 	#e.g. t="bla blac \frac{x}{y}", command=frac arg_map=\\1 / \\2
@@ -114,6 +120,7 @@ def printtex_text(t):
 	t=t.replace("~"," ")
 	t=t.replace("}","")
 	t=t.replace("\\-","-")
+	t=t.replace("---","&mdash;")
 	#print_output(t)
 	return t
 
@@ -147,19 +154,19 @@ def printtex(t):
 			math=not math
 
 def put_title(value):
-	open_tag("strong")
-#	open_tag("a","href=\"#\"")
+	open_div("paper-title")
 	printtex(value.fields['title'])
+	close_tag("h3")
 	if 'note' in value.fields:
 		print_output(' <small><font color=\"red\">' + value.fields['note'] + "</font></small>")
-#	close_tag("a")
-	close_tag("strong")
+	close_tag("div")
 
 
 def put_title_author(value):
 	put_title(value)
-	html_br()
 	print_authors(value)
+
+
 
 def new_entry_end(key,value):
 	print value.fields["year"]
@@ -168,38 +175,25 @@ def new_entry_end(key,value):
 	#print "@"+value.fields['type']+" {" + key +","
 
 	if	"abstract" in value.fields:
-		key=key.replace(":","__")
-		print_output("<small><a href=\"#"+key+"\" id=\"hide_"+key+"\">Hide Details</a> / \n")
-		print_output("<a href=\"#"+key+"\" id=\"show_"+key+"\">Show Details</a></small>\n")
-		print_output("<script>\n")
-		print_output("$(\"#hide_"+key+"\").click(function () {\n")
-		print_output("  $(\"."+key+"\").hide(\"fast\", function () {\n")
-		print_output("    // use callee so don't have to name the function\n")
-		print_output("    $(this).prev().hide(\"normal\", arguments.callee); \n")
-		print_output("  });\n")
-		print_output("});\n")
-		print_output("$(\"#show_"+key+"\").click(function () {\n")
-		print_output("  $(\"."+key+"\").show(200);\n")
-		print_output(" });\n")
-		print_output("</script>\n")
+		close_hidden_div()
+
 
 def new_entry_begin(key,value):
 	print_output("")
 
 
 def put_data_line(value,f,f2=""):
+	open_div("paper-data")
 	if f in value.fields:
-		html_br()
-		html_i(value.fields[f])
+		html_i(value.fields[f]+"")
 		print_output(",")
-		if f2 in value.fields:
-			html_i(" "+value.fields[f2])
-			print_output(",")
 	print_output(" "+value.fields['year']+".")
+	close_div()
 
 def print_authors(value):
 	global author_data
 
+	open_div("paper-authors")
 	firstPerson=True
 	for p in value.persons.items()[0][1]:
 		if not firstPerson:
@@ -220,7 +214,7 @@ def print_authors(value):
 			link_=author_data[pattern]
 			if re.search(pattern,name) != None:
 				link=link_
-				
+
 		if link==None:
 			print_output(printtex_text(name[0:len(name)-1]))
 			sys.stderr.write("No link for: " + name + "\n")
@@ -230,11 +224,11 @@ def print_authors(value):
 			print_output('</a>')
 
 	print_output(".")
+	close_div()
 
 def print_doi(value):
 	if 'doi' in value.fields:
 		html_intag("strong","DOI: ")
-		html_br()
 		doi=value.fields['doi']
 		print_output(" ")
 		html_a("http://dx.doi.org/"+doi, "["+doi+"]")
@@ -253,87 +247,79 @@ def read_author_data(filename):
 			
 		url=url.rstrip('\n')
 		author_data[name]=url
+
+def open_hidden_div():
+	global publication_counter
+	p=str(publication_counter)
+	open_div()
+	print_output("<div class=\"module-det mod" + p + "\" style=\"display:none;\">")
+
+def close_hidden_div():
+	global publication_counter
+	p=str(publication_counter)
+	close_div()
+	print_output("<a class=\"details-less detl" + p +"\" href=\"javascript:;\" onClick=\"details("+p+")\" id=\"hide_mod"+p+"\" style=\"display:none;\">hide details</a> <a class=\"details-more detm"+p+"\" href=\"javascript:;\" onClick=\"details("+p+")\" id=\"show_mod"+p+"\">read details</a>")
+
 	
 def handle_default(key,value):
 	new_entry_begin(key,value)
 
 	put_title_author(value)
 	if 'journal' in value.fields:
-		html_br()
 		html_i(value.fields['journal'])
 	if 'howpublished' in value.fields:
-		html_br()
 		html_i(value.fields['howpublished'])
 	print_output(",")
 	print_output(value.fields['year']+".")
 
-	open_tag("div")
-	open_tag("div","class=\""+key.replace(":","__")+"\" style=\"display:none;\"")
+	open_hidden_div()
 	if 'abstract' in value.fields:
 		print_abstract(value)
-	close_tag("div")
-	close_tag("div")
-
-	
 	new_entry_end(key,value)
 
 def handle_article(key,value):
 	new_entry_begin(key,value)
 	put_title_author(value)
 	put_data_line(value,"journal")
-	open_tag("div")
-	open_tag("div","class=\""+key.replace(":","__")+"\" style=\"display:none;\"")
+	open_hidden_div()
 	if 'abstract' in value.fields:
 		print_abstract(value)
 	print_doi(value)
-	close_tag("div")
-	close_tag("div")
-
 	new_entry_end(key,value)
 
 def print_abstract(value):
 	html_intag("strong","Abstract:")
-	html_br()
+	open_div("paper-abstract")
 	printtex(value.fields['abstract'])
-	html_br()
-
+	close_div()
 
 def handle_phdthesis(key,value):
 	new_entry_begin(key,value)
 	put_title_author(value)
 	put_data_line(value,"school")
-	open_tag("div")
-	open_tag("div","class=\""+key.replace(":","__")+"\" style=\"display:none;\"")
+	open_hidden_div()
 	if 'abstract' in value.fields:
 		print_abstract(value)
-	close_tag("div")
-	close_tag("div")
 	new_entry_end(key,value)
 
 def handle_inproceedings(key,value):
 	new_entry_begin(key,value)
 	put_title_author(value)
 	put_data_line(value,"booktitle")
-	open_tag("div")
-	open_tag("div","class=\""+key.replace(":","__")+"\" style=\"display:none;\"")
+	open_hidden_div()
 	if 'abstract' in value.fields:
 		print_abstract(value)
 	print_doi(value)
-	close_tag("div")
-	close_tag("div")
 	new_entry_end(key,value)
 
 def handle_techreport(key,value):
 	new_entry_begin(key,value)
 	put_title_author(value)
 	put_data_line(value,"institution","number")
-	open_tag("div")
-	open_tag("div","class=\""+key.replace(":","__")+"\" style=\"display:none;\"")
+	open_hidden_div()
 	if 'abstract' in value.fields:
 		print_abstract(value)
 	print_doi(value)
-	close_tag("div")
-	close_tag("div")
 	new_entry_end(key,value)
 
 def handle_values(l):
@@ -342,6 +328,7 @@ def handle_values(l):
 	handlers = {'article':handle_article,'inproceedings':handle_inproceedings,'techreport':handle_techreport,'phdthesis':handle_phdthesis}
 	for key, value in l_sorted:
 		bibtex_class = value.type
+		open_div("paper")
 		open_tag("li")
 		if (bibtex_class in handlers):
 			handlers[bibtex_class](key,value)
@@ -349,20 +336,15 @@ def handle_values(l):
 			sys.stderr.write("No handler for: " + bibtex_class+", using default\n")
 			handle_default(key,value)
 		close_tag("li")
-		html_br()
+		close_div()
 		publication_counter+=1
 
 def handle_types(list_of_types,typemaps, description):
-	print_output("<strong>"+description+"</strong>")
-#	open_tag("div","id=\"accordion\"")
+	print_output("<h3>"+description+"</h3>")
 	open_tag("ol","start=\""+str(publication_counter)+"\"")
 	for l in list_of_types:
 		handle_values(typemaps[l])
 	close_tag("ol")
-
-#	close_tag("div")
-
-
 	
 def main():
 	import getopt
@@ -387,10 +369,6 @@ def main():
 
 	bib_data = parser.parse_file(input_filename)
 
-	open_tag("html")
-	put_header()
-	open_tag("body")
-
 	from collections import defaultdict
 	typemaps=defaultdict(list)
 
@@ -405,13 +383,11 @@ def main():
 	handle_types(["misc"],typemaps,"Abstracts")
 
 
-	html_br()
-	print_output("<small>Generated by ")
-	html_a("https://github.com/thomasmoelhave/pybib2html","pybib2html")
-	print_output("</small>")
-
-	close_tag("body")
-	close_tag("html")
+	print_output("<script>$(\".details-more\").click(details); $(\".details-less\").click(details)</script>")
+	# html_br()
+	# print_output("<small>Generated by ")
+	# html_a("https://github.com/thomasmoelhave/pybib2html","pybib2html")
+	# print_output("</small>")
 
 main()
 
