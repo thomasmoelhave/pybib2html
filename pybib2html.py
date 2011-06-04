@@ -83,6 +83,14 @@ def open_div(classname=None):
 	else:
 		open_tag("div","class=\""+classname+"\"")
 
+def open_span(classname):
+	open_tag("span","class=\""+classname+"\"")
+
+def close_span():
+	close_tag("span")
+	print_output("\n\n")
+
+
 def close_div():
 	close_tag("div")
 	print_output("\n\n")
@@ -160,8 +168,9 @@ def put_title(value):
 	close_tag("h4") 
 	print_output("\n")
 	if 'note' in value.fields:
-		print_output(' <small><font color=\"red\">' + value.fields['note'] + "</font></small>")
-
+		open_span('paper-note')
+		print_output(value.fields['note'])
+		close_span()
 
 def put_title_author(value):
 	put_title(value)
@@ -170,9 +179,6 @@ def put_title_author(value):
 
 
 def new_entry_end(key,value):
-	if "abstract" in value.fields:
-		close_hidden_div()
-
 	print_output("\n<!-- END ENTRY -->\n")
 
 
@@ -187,6 +193,17 @@ def put_data_line(value,f,f2=""):
 		print_output(",")
 	print_output(" "+value.fields['year']+".")
 	close_div()
+
+def put_details(value):
+	
+	if 'abstract' not in value.fields and 'doi' not in value.fields:
+		return
+
+	open_hidden_div()
+	if 'abstract' in value.fields:
+		print_abstract(value)
+	print_doi(value)
+	close_hidden_div()
 
 def print_authors(value):
 	global author_data
@@ -271,19 +288,15 @@ def handle_default(key,value):
 	print_output(",")
 	print_output(value.fields['year']+".")
 
-	open_hidden_div()
-	if 'abstract' in value.fields:
-		print_abstract(value)
+	put_details(value)
+
 	new_entry_end(key,value)
 
 def handle_article(key,value):
 	new_entry_begin(key,value)
 	put_title_author(value)
 	put_data_line(value,"journal")
-	open_hidden_div()
-	if 'abstract' in value.fields:
-		print_abstract(value)
-	print_doi(value)
+	put_details(value)
 	new_entry_end(key,value)
 
 def print_abstract(value):
@@ -296,29 +309,21 @@ def handle_phdthesis(key,value):
 	new_entry_begin(key,value)
 	put_title_author(value)
 	put_data_line(value,"school")
-	open_hidden_div()
-	if 'abstract' in value.fields:
-		print_abstract(value)
+	put_details(value)
 	new_entry_end(key,value)
 
 def handle_inproceedings(key,value):
 	new_entry_begin(key,value)
 	put_title_author(value)
 	put_data_line(value,"booktitle")
-	open_hidden_div()
-	if 'abstract' in value.fields:
-		print_abstract(value)
-	print_doi(value)
+	put_details(value)
 	new_entry_end(key,value)
 
 def handle_techreport(key,value):
 	new_entry_begin(key,value)
 	put_title_author(value)
 	put_data_line(value,"institution","number")
-	open_hidden_div()
-	if 'abstract' in value.fields:
-		print_abstract(value)
-	print_doi(value)
+	put_details(value)
 	new_entry_end(key,value)
 
 def handle_values(l):
