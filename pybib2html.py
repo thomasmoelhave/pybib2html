@@ -37,7 +37,6 @@ def print_tag(t,extra_args=""):
 		print_output("<"+t+">")
 	else:
 		print_output("<"+t+" " + extra_args+">")
-	print_output("\n")
 
 def put_header():
 	open_tag("head");
@@ -86,6 +85,7 @@ def open_div(classname=None):
 
 def close_div():
 	close_tag("div")
+	print_output("\n\n")
 
 
 def printtex_replace_command(t,command,newtext,argc,commandprefix="\\\\"):
@@ -154,12 +154,13 @@ def printtex(t):
 			math=not math
 
 def put_title(value):
-	open_div("paper-title")
+	print_output("\n\n<!-- - - - - - - NEW PAPER - - - - - - - - -->\n\n\n")
+	open_tag("h4")
 	printtex(value.fields['title'])
-	close_tag("h3")
+	close_tag("h4") 
+	print_output("\n")
 	if 'note' in value.fields:
 		print_output(' <small><font color=\"red\">' + value.fields['note'] + "</font></small>")
-	close_tag("div")
 
 
 def put_title_author(value):
@@ -169,17 +170,14 @@ def put_title_author(value):
 
 
 def new_entry_end(key,value):
-	print value.fields["year"]
-	print value.fields.items()
-
-	#print "@"+value.fields['type']+" {" + key +","
-
-	if	"abstract" in value.fields:
+	if "abstract" in value.fields:
 		close_hidden_div()
+
+	print_output("\n<!-- END ENTRY -->\n")
 
 
 def new_entry_begin(key,value):
-	print_output("")
+	print_output("\n<!-- NEW ENTRY -->\n")
 
 
 def put_data_line(value,f,f2=""):
@@ -258,6 +256,7 @@ def close_hidden_div():
 	global publication_counter
 	p=str(publication_counter)
 	close_div()
+	close_div()
 	print_output("<a class=\"details-less detl" + p +"\" href=\"javascript:;\" onClick=\"details("+p+")\" id=\"hide_mod"+p+"\" style=\"display:none;\">hide details</a> <a class=\"details-more detm"+p+"\" href=\"javascript:;\" onClick=\"details("+p+")\" id=\"show_mod"+p+"\">read details</a>")
 
 	
@@ -328,7 +327,6 @@ def handle_values(l):
 	handlers = {'article':handle_article,'inproceedings':handle_inproceedings,'techreport':handle_techreport,'phdthesis':handle_phdthesis}
 	for key, value in l_sorted:
 		bibtex_class = value.type
-		open_div("paper")
 		open_tag("li")
 		if (bibtex_class in handlers):
 			handlers[bibtex_class](key,value)
@@ -336,7 +334,6 @@ def handle_values(l):
 			sys.stderr.write("No handler for: " + bibtex_class+", using default\n")
 			handle_default(key,value)
 		close_tag("li")
-		close_div()
 		publication_counter+=1
 
 def handle_types(list_of_types,typemaps, description):
@@ -376,11 +373,13 @@ def main():
 		bibtex_class = value.type
 		typemaps[bibtex_class].append((key,value))
 
-	
+
+	open_div("paper")
 	handle_types(["phdthesis"],typemaps,"Dissertation")
 	handle_types(["inproceedings"],typemaps,"Conference Papers")
 	handle_types(["article","techreport"],typemaps,"Other Papers")
 	handle_types(["misc"],typemaps,"Abstracts")
+	close_div()
 
 
 	print_output("<script>$(\".details-more\").click(details); $(\".details-less\").click(details)</script>")
