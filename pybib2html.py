@@ -326,26 +326,27 @@ def handle_techreport(key,value):
 	put_details(value)
 	new_entry_end(key,value)
 
-def handle_values(l):
+def handle_values(l,use_key_only):
 	global publication_counter
 	l_sorted = sorted(l, cmp=sort_by_year)
 	handlers = {'article':handle_article,'inproceedings':handle_inproceedings,'techreport':handle_techreport,'phdthesis':handle_phdthesis}
 	for key, value in l_sorted:
-		bibtex_class = value.type
-		open_tag("li")
-		if (bibtex_class in handlers):
-			handlers[bibtex_class](key,value)
-		else:
-			sys.stderr.write("No handler for: " + bibtex_class+", using default\n")
-			handle_default(key,value)
-		close_tag("li")
-		publication_counter+=1
+		if use_key_only=="" or ("key" in value.fields and value.fields["key"]==use_key_only):
+			bibtex_class = value.type
+			open_tag("li")
+			if (bibtex_class in handlers):
+				handlers[bibtex_class](key,value)
+			else:
+				sys.stderr.write("No handler for: " + bibtex_class+", using default\n")
+				handle_default(key,value)
+			close_tag("li")
+			publication_counter+=1
 
-def handle_types(list_of_types,typemaps, description):
+def handle_types(list_of_types,typemaps, description,use_key_only=""):
 	print_output("<h3>"+description+"</h3>")
 	open_tag("ol","start=\""+str(publication_counter)+"\"")
 	for l in list_of_types:
-		handle_values(typemaps[l])
+		handle_values(typemaps[l],use_key_only)
 	close_tag("ol")
 	
 def main():
@@ -382,7 +383,8 @@ def main():
 	open_div("paper")
 	handle_types(["phdthesis"],typemaps,"Dissertation")
 	handle_types(["inproceedings"],typemaps,"Conference Papers")
-	handle_types(["article","techreport"],typemaps,"Other Papers")
+	handle_types(["article"],typemaps,"Journal Papers","journal")
+	handle_types(["article","techreport"],typemaps,"Other Papers","other")
 	handle_types(["misc"],typemaps,"Abstracts")
 	close_div()
 
