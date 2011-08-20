@@ -2,6 +2,7 @@
 
 import sys
 import re
+import os.path
 
 publication_counter=1
 output_file=sys.stdout
@@ -88,7 +89,6 @@ def open_span(classname):
 
 def close_span():
 	close_tag("span")
-	print_output("\n\n")
 
 
 def close_div():
@@ -163,17 +163,43 @@ def printtex(t):
 
 def put_title(value):
 	print_output("\n\n<!-- - - - - - - NEW PAPER - - - - - - - - -->\n\n\n")
-	open_tag("h4")
-	printtex(value.fields['title'])
-	close_tag("h4") 
-	print_output("\n")
+	open_span("papertitle")
 	if 'note' in value.fields:
 		open_span('paper-note')
 		print_output(value.fields['note'])
 		close_span()
+	printtex(value.fields['title'])
+	close_span() 
+	html_br()
+	print_output("\n")
 
-def put_title_author(value):
+def put_image(key):
+	#Look for fig/key.{png,jpg}
+	prefix="paper_figs/"
+
+	key_underscore=key.replace(':','_')
+
+	png_path=prefix+key_underscore+".png"
+	jpg_path=prefix+key_underscore+".jpg"
+	
+	path=""
+
+	if os.path.isfile(png_path):
+		path=png_path
+	if os.path.isfile(jpg_path):
+		path=jpg_path
+
+	if path != "":
+		open_tag("img","src=\""+path+"\" alt=\"Figure for"+key_underscore+"\""+"width=\"80\" height=\"80\"")
+		close_tag("img")
+		print "Image for " + key + ": " + path
+	else:
+		print "Image for " + key + " not found."
+
+
+def put_title_author(value,key):
 	put_title(value)
+	put_image(key)
 	print_authors(value)
 
 
@@ -280,7 +306,7 @@ def close_hidden_div():
 def handle_default(key,value):
 	new_entry_begin(key,value)
 
-	put_title_author(value)
+	put_title_author(value,key)
 	if 'journal' in value.fields:
 		html_i(value.fields['journal'])
 	if 'howpublished' in value.fields:
@@ -294,7 +320,7 @@ def handle_default(key,value):
 
 def handle_article(key,value):
 	new_entry_begin(key,value)
-	put_title_author(value)
+	put_title_author(value,key)
 	put_data_line(value,"journal")
 	put_details(value)
 	new_entry_end(key,value)
@@ -307,21 +333,21 @@ def print_abstract(value):
 
 def handle_phdthesis(key,value):
 	new_entry_begin(key,value)
-	put_title_author(value)
+	put_title_author(value,key)
 	put_data_line(value,"school")
 	put_details(value)
 	new_entry_end(key,value)
 
 def handle_inproceedings(key,value):
 	new_entry_begin(key,value)
-	put_title_author(value)
+	put_title_author(value,key)
 	put_data_line(value,"booktitle")
 	put_details(value)
 	new_entry_end(key,value)
 
 def handle_techreport(key,value):
 	new_entry_begin(key,value)
-	put_title_author(value)
+	put_title_author(value,key)
 	put_data_line(value,"institution","number")
 	put_details(value)
 	new_entry_end(key,value)
