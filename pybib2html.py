@@ -163,14 +163,15 @@ def printtex(t):
 
 def put_title(value):
 	print_output("\n\n<!-- - - - - - - NEW PAPER - - - - - - - - -->\n\n\n")
-	open_span("papertitle")
+
 	if 'note' in value.fields:
 		open_span('paper-note')
 		print_output(value.fields['note'])
 		close_span()
+
+	open_span("papertitle")
 	printtex(value.fields['title'])
 	close_span() 
-	html_br()
 	print_output("\n")
 
 def put_image(key):
@@ -181,6 +182,7 @@ def put_image(key):
 
 	png_path=prefix+key_underscore+".png"
 	jpg_path=prefix+key_underscore+".jpg"
+	thumb_path=prefix+key_underscore+"_thumb.jpg"
 	
 	path=""
 
@@ -190,16 +192,16 @@ def put_image(key):
 		path=jpg_path
 
 	if path != "":
-		open_tag("img","src=\""+path+"\" alt=\"Figure for"+key_underscore+"\""+"width=\"80\" height=\"80\"")
-		close_tag("img")
+		#open_tag("img","src=\""+thumb_path+"\" alt=\"Figure for "+key_underscore+"\" "+"width=\"80\" height=\"80\"")
+		open_tag("img","src=\""+thumb_path+"\" alt=\"Figure for "+key_underscore+"\"")
 		print "Image for " + key + ": " + path
 	else:
 		print "Image for " + key + " not found."
 
 
 def put_title_author(value,key):
-	put_title(value)
 	put_image(key)
+	put_title(value)
 	print_authors(value)
 
 
@@ -269,10 +271,10 @@ def print_authors(value):
 
 def print_doi(value):
 	if 'doi' in value.fields:
-		html_intag("strong","DOI: ")
+		html_intag("strong","doi: ")
 		doi=value.fields['doi']
 		print_output(" ")
-		html_a("http://dx.doi.org/"+doi, "["+doi+"]")
+		html_a("http://dx.doi.org/"+doi, ""+doi+"")
 
 def read_author_data(filename):
 	f=open(filename)
@@ -302,55 +304,97 @@ def close_hidden_div():
 	close_div()
 	print_output("<a class=\"details-less detl" + p +"\" href=\"javascript:;\" onClick=\"details("+p+")\" id=\"hide_mod"+p+"\" style=\"display:none;\">hide details</a> <a class=\"details-more detm"+p+"\" href=\"javascript:;\" onClick=\"details("+p+")\" id=\"show_mod"+p+"\">read details</a>")
 
-	
-def handle_default(key,value):
-	new_entry_begin(key,value)
-
-	put_title_author(value,key)
-	if 'journal' in value.fields:
-		html_i(value.fields['journal'])
-	if 'howpublished' in value.fields:
-		html_i(value.fields['howpublished'])
-	print_output(",")
-	print_output(value.fields['year']+".")
-
-	put_details(value)
-
-	new_entry_end(key,value)
-
-def handle_article(key,value):
-	new_entry_begin(key,value)
-	put_title_author(value,key)
-	put_data_line(value,"journal")
-	put_details(value)
-	new_entry_end(key,value)
-
 def print_abstract(value):
 	html_intag("strong","Abstract:")
 	open_div("paper-abstract")
 	printtex(value.fields['abstract'])
 	close_div()
+	
+def handle_default(key,value):
+	new_entry_begin(key,value)
+
+	open_div("titlewrap")
+	put_image(key)
+	put_title(value)
+	close_div()
+
+
+	open_div("infowrap")
+	print_authors(value)
+
+	if 'journal' in value.fields:
+		html_i(value.fields['journal'])
+	if 'howpublished' in value.fields:
+		html_i(value.fields['howpublished'])
+	print_output(", ")
+	print_output(value.fields['year']+".")
+
+	put_details(value)
+	close_div()
+
+	new_entry_end(key,value)
+
+def handle_article(key,value):
+	new_entry_begin(key,value)
+
+	open_div("titlewrap")
+	put_image(key)
+	put_title(value)
+	close_div()
+
+	open_div("infowrap")
+	print_authors(value)
+	put_data_line(value,"journal")
+	put_details(value)
+	new_entry_end(key,value)
+	close_div()
+
 
 def handle_phdthesis(key,value):
 	new_entry_begin(key,value)
-	put_title_author(value,key)
+
+	open_div("titlewrap")
+	put_image(key)
+	put_title(value)
+	close_div()
+		  
+ 	open_div("infowrap")
+	print_authors(value)
 	put_data_line(value,"school")
 	put_details(value)
 	new_entry_end(key,value)
+	close_div()
 
 def handle_inproceedings(key,value):
 	new_entry_begin(key,value)
-	put_title_author(value,key)
+
+	open_div("titlewrap")
+	put_image(key)
+	put_title(value)
+	close_div()
+
+	open_div("infowrap")
+	print_authors(value)
 	put_data_line(value,"booktitle")
 	put_details(value)
 	new_entry_end(key,value)
+	close_div()
 
 def handle_techreport(key,value):
 	new_entry_begin(key,value)
-	put_title_author(value,key)
+
+	open_div("titlewrap")
+	put_image(key)
+	put_title(value)
+	close_div()
+
+	open_div("infowrap")
+	print_authors(value)
 	put_data_line(value,"institution","number")
 	put_details(value)
 	new_entry_end(key,value)
+	close_div()
+
 
 def handle_values(l,use_key_only):
 	global publication_counter
@@ -370,7 +414,11 @@ def handle_values(l,use_key_only):
 
 def handle_types(list_of_types,typemaps, description,use_key_only=""):
 	print_output("<h3>"+description+"</h3>")
-	open_tag("ol","start=\""+str(publication_counter)+"\"")
+	if publication_counter==1:
+		open_tag("ol","class=first")
+	else:
+		open_tag("ol")
+
 	for l in list_of_types:
 		handle_values(typemaps[l],use_key_only)
 	close_tag("ol")
