@@ -161,7 +161,7 @@ def printtex(t):
 				print_output(printtex_text(tok) )
 			math=not math
 
-def put_title(value):
+def put_title(key,value):
 	print_output("\n\n<!-- - - - - - - NEW PAPER - - - - - - - - -->\n\n\n")
 
 	if 'note' in value.fields:
@@ -170,9 +170,33 @@ def put_title(value):
 		close_span()
 
 	open_span("papertitle")
+	open_paper_link(key)
 	printtex(value.fields['title'])
+	close_paper_link(key)
 	close_span() 
 	print_output("\n")
+
+def get_paper_path(key):
+	prefix="papers/"
+	key_underscore=key.replace(':','_')
+	p = prefix+key_underscore+".pdf"
+	if os.path.isfile(p):
+		return p
+	else:
+		return ""
+
+def open_paper_link(key):
+	p = get_paper_path(key)
+	if p != "":
+		open_tag("a","href="+p+" title=\"Download PDF\"")
+	else:
+		print "No pdf for " + key
+
+def close_paper_link(key):
+	p = get_paper_path(key)
+	if p != "":
+		close_tag("a")
+
 
 def put_image(key):
 	#Look for fig/key.{png,jpg}
@@ -194,14 +218,14 @@ def put_image(key):
 	if path != "":
 		#open_tag("img","src=\""+thumb_path+"\" alt=\"Figure for "+key_underscore+"\" "+"width=\"80\" height=\"80\"")
 		open_tag("img","src=\""+thumb_path+"\" alt=\"Figure for "+key_underscore+"\"")
-		print "Image for " + key + ": " + path
+#		print "Image for " + key + ": " + path
 	else:
 		print "Image for " + key + " not found."
 
 
 def put_title_author(value,key):
 	put_image(key)
-	put_title(value)
+	put_title(key,value)
 	print_authors(value)
 
 
@@ -260,7 +284,7 @@ def print_authors(value):
 
 		if link==None:
 			print_output(printtex_text(name[0:len(name)-1]))
-			sys.stderr.write("No link for: " + name + "\n")
+#			sys.stderr.write("No link for: " + name + "\n")
 		else:
 			print_output('<a href=\"'+link+'\">')
 			print_output(printtex_text(name[0:len(name)-1]))
@@ -315,9 +339,9 @@ def handle_default(key,value):
 
 	open_div("titlewrap")
 	put_image(key)
-	put_title(value)
-	close_div()
 
+	put_title(key,value)
+	close_div()
 
 	open_div("infowrap")
 	print_authors(value)
@@ -339,7 +363,7 @@ def handle_article(key,value):
 
 	open_div("titlewrap")
 	put_image(key)
-	put_title(value)
+	put_title(key,value)
 	close_div()
 
 	open_div("infowrap")
@@ -355,7 +379,7 @@ def handle_phdthesis(key,value):
 
 	open_div("titlewrap")
 	put_image(key)
-	put_title(value)
+	put_title(key,value)
 	close_div()
 		  
  	open_div("infowrap")
@@ -370,7 +394,7 @@ def handle_inproceedings(key,value):
 
 	open_div("titlewrap")
 	put_image(key)
-	put_title(value)
+	put_title(key,value)
 	close_div()
 
 	open_div("infowrap")
@@ -385,7 +409,7 @@ def handle_techreport(key,value):
 
 	open_div("titlewrap")
 	put_image(key)
-	put_title(value)
+	put_title(key,value)
 	close_div()
 
 	open_div("infowrap")
